@@ -1,0 +1,158 @@
+{
+    "amp_max": 1500,
+    "tdur": 1000,
+    "t0": 500,
+    "tbin": 25,
+    "eesdur": 300,
+    "datatype": "treadmill_2309",
+    "withlayernorm": true,
+    
+    "name": "SpinalCord",
+    "device": {
+        "type": "cpu"
+    },
+    "training_target": "kine",
+    "kine_emg_ratio": 1.0,
+    
+    "muscle_list": [[0, 2], [1], [3, 5], [4]],
+    
+    "model_type": "DeepSpine",
+    "seed": 1213, 
+
+    "arch": {
+        "embedding": {
+            "type": "SensoryEncoder",
+            "args": {
+                "in_channels": 2,
+                "out_channels": 128,
+                "kernel_size": 3,
+                "groups": 1,
+                "activation": "relu",
+                "use_norm": true
+            }
+        }, 
+        "core": {
+            "type": "GRU_231027",
+            "args": {
+                "emb_in_channels": 2,
+                "emb_out_channels": 13,
+                "emb_kernel_size": 1,
+                "emb_groups": 1,
+                "emb_activation": "relu",
+                "emb_use_norm": true,                
+                "emb2_in_channels": 13,
+                "emb2_out_channels": 96,
+                "input_size": 96,
+                "hidden_size": 24,
+                "Tmax": 100,                
+                "rdo_in_channels": 24,
+                "rdo_out_channels": 2,
+                "rdo_kernel_size": 1,
+                "rdo_groups": 1,
+                "rdo_activation": "none"                
+            }
+        },
+        "readout": {
+            "type": "ConvNet1d",
+            "args": {
+                "in_channels": 24,
+                "out_channels": 2,
+                "kernel_size": 1,
+                "groups": 1,
+                "activation": "none"
+            }
+        }
+    },
+    "data_loader": {
+        "train_loader_args": {
+            "batch_size": 20,
+            "num_workers": 4,
+            "shuffle": true,
+            "dataset": {
+                "type": "ExperimentalDataset",
+                "args":{
+                    "file_path": "exp_data/both/stim_treadmill/230914_B124_2J_v4_exc_inferv230920/",
+                    "input_type": "angle",
+                    "output_type": "emg",
+                    "is_ees": true,
+                    "is_train": true,
+                    "input_transform": [{
+                        "type": "Normalize",
+                        "args": {
+                            "mean": [-0.2337, 0.0430],
+                            "std": [0.2394, 0.1596],
+                            "axis": 1
+                        }
+                    }],
+                    "share_transform": [{
+                        "type": "TemporalCrop",
+                        "args": {
+                            "start_idx": 600,
+                            "window_size": 400,
+                            "axis": 1
+                        }
+                    }]
+                }
+            }
+        },
+        "valid_loader_args": {
+            "batch_size": 20,
+            "num_workers": 4,
+            "shuffle": false,
+            "dataset": {
+                "type": "ExperimentalDataset",
+                "args":{
+                    "file_path": "exp_data/both/stim_treadmill/230914_B124_2J_v4_exc_inferv230920/",
+                    "input_type": "angle",
+                    "output_type": "emg",
+                    "is_ees": true,
+                    "is_train": false,
+                    "input_transform": [{
+                        "type": "Normalize",
+                        "args": {
+                            "mean": [-0.2337, 0.0430],
+                            "std": [0.2394, 0.1596],
+                            "axis": 1
+                        }
+                    }],
+                    "share_transform": [{
+                        "type": "TemporalCrop",
+                        "args": {
+                            "start_idx": 600,
+                            "window_size": 400,
+                            "axis": 1
+                        }
+                    }]
+                }
+            }
+        }
+    },
+    "optimizer": {
+        "core_cfg": {
+            "type": "Adam",
+            "args": {
+                "lr": 0.0001,
+                "weight_decay": 0.0,
+                "amsgrad": false
+            }
+        }
+    },
+    "loss": "smooth_l1_loss",
+    "trainer": {
+        "type": "trainer_230926_unified_t25_mid__05_1_usingInference",
+        "args": {
+            "max_iter": 2000,
+            "max_norm": 1,
+            "with_ees_train": true,
+            "with_ees_valid": true,
+
+            "save_dir": "saved/231027_RNN_treadmill_wEES2309_v4_inferv230920_sizematch",
+            "saveckpt_period": 1,
+            "saveact_period": 50,
+            "eval_period": 25,
+            "gpu_ids": [0]
+        }
+    },
+    "with_weight_clipping": false,
+    "with_bias_clipping": false
+} 

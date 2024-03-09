@@ -1,0 +1,120 @@
+{
+    "memo": "muscle_list-['LeftPer', 'LeftBF', 'LeftGas', 'LeftGra', 'RightPer', 'RightBF', 'RightGas', 'RightGra']; training_target=emg or kine or both; kine_emg_ratio = 1 -> training only using kinematics; Revised from DeepSpine_230802_Paran8_left_DS1_mnsFB_bothTarget050_stimSling_from0.json, DeepSpine_230731_Paran8_left_WBFclip_t25_unified_5_EMG_5s_mid_NBC_LongW_DS1_mnsFB.json withKineFB_4J_CLD1_Paran1",
+    
+    "amp_max": 1500,
+    "tdur": 1000,
+    "t0": 500,
+    "tbin": 25,
+    "eesdur": 300,
+    "datatype": "treadmill_2309",
+    "withlayernorm": true,
+    
+    "name": "SpinalCord",
+    "device": {
+        "type": "cuda:0"
+    },
+    "training_target": "kine",
+    "kine_emg_ratio": 1.0,
+    
+    "muscle_list": [[0, 2], [1], [3, 5], [4]],
+    
+    "model_type": "DeepSpine",
+    "seed": 1213, 
+
+    "arch": {        
+        "core": {
+            "type": "SCC_230926_unified_t25_5_mnsFB_atOnset",
+            "args": {
+                "muscle_list": [[0, 2], [1], [3, 5], [4]],
+                "kine_list": [[0], [0], [1], [1]],
+                "ds_kine_list": {"1": [0, 1], "3": [2, 3]},
+                "ang_kine_list": [[0], [1]],
+                "with_emg": false,
+                
+                "emb_in_channels": 1,
+                "emb_out_channels": 13,
+                "emb_kernel_size": 1,
+                "emb_groups": 1,
+                "emb_activation": "relu",
+                "emb_use_norm": true,                
+                "emb2_in_channels": 13,
+                "emb2_out_channels": 24,
+                "Ia_neurons": 6, 
+                "II_neurons": 6, 
+                "ex_neurons": 6, 
+                "Iai_neurons": 6,
+                "mn_neurons": 6,
+                "Tmax": 100,                
+                "rdo_in_channels": 12,
+                "rdo_emg_channels": 4,
+                "rdo_out_channels": 1,
+                "rdo_kernel_size": 1,
+                "rdo_groups": 1,
+                "rdo_activation": "none"
+            }
+        }        
+    },
+    
+    "data_loader": {
+        "train_loader_args": {
+            "batch_size": 20,
+            "num_workers": 4,
+            "shuffle": true,
+            "dataset": {
+                "type": "ExperimentalDataset",
+                "args":{
+                    "file_path": "exp_data/both/stim_treadmill/230914_B124_2J_v4_exc_inferv230920/",
+                    "input_type": "angle",
+                    "output_type": "emg",
+                    "is_ees": true,
+                    "is_train": true
+                }
+            }
+        },
+        "valid_loader_args": {
+            "batch_size": 20,
+            "num_workers": 4,
+            "shuffle": false,
+            "dataset": {
+                "type": "ExperimentalDataset",
+                "args":{
+                    "file_path": "exp_data/both/stim_treadmill/230914_B124_2J_v4_exc_inferv230920/",
+                    "input_type": "angle",
+                    "output_type": "emg",
+                    "is_ees": true,
+                    "is_train": false                   
+                }
+            }
+        }
+    },
+    
+    "optimizer": {        
+        "core_cfg": {
+            "type": "Adam",
+            "args": {
+                "lr": 0.0001,
+                "weight_decay": 0.0,
+                "amsgrad": false
+            }
+        }
+    },
+    
+    "loss": "smooth_l1_loss",
+    "trainer": {
+        "type": "trainer_230926_unified_t25_mid__05_1_usingInference",
+        "args": {
+            "max_iter": 2000,
+            "max_norm": 1,
+            "with_ees_train": true,
+            "with_ees_valid": true,
+
+            "save_dir": "saved/231010_DeepSpine_treadmill_wEES2309_v4_inferv230920",
+            "saveckpt_period": 1,
+            "saveact_period": 50,
+            "eval_period": 25,
+            "gpu_ids": [0]
+        }
+    },
+    "with_weight_clipping": true,
+    "with_bias_clipping": false
+} 
